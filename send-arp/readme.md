@@ -1,2 +1,2 @@
-<video src="send-arp/output.mp4" controls width="100%"></video>
+<video src="output.mp4" controls width="100%"></video>
 
