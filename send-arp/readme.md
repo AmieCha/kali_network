@@ -1,4 +1,2 @@
-
-### Demo
-[]!(https://github.com/kali_network/send-arp/output.mp4)
+<video src="send-arp/output.mp4" controls width="100%"></video>
 
