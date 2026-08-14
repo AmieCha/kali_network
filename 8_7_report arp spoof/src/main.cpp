@@ -279,9 +279,9 @@ void ArpSpoof::relayLoop()
         if (eth->smac_ != flows_[i].senderMac_) // find which victim sent it
           continue;
  
-        // Change MACs and forward to real target
-        eth->smac_ = myMac_;                 // from: me
-        eth->dmac_ = flows_[i].targetMac_;   // to: real target (e.g. gateway)
+        
+        eth->smac_ = myMac_;                 
+        eth->dmac_ = flows_[i].targetMac_;   
  
         std::lock_guard<std::mutex> lock(txMutex_);
         int r = pcap_sendpacket(tx_, frame, header->caplen);
