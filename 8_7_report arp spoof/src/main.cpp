@@ -78,6 +78,7 @@ private:
   std::atomic<bool> run_{true};
 };
 
+// when program ends : fix all victim ARP caches and close handle 
 ArpSpoof::~ArpSpoof()
 {
   for (size_t i = 0; i < flows_.size(); i++)
@@ -98,13 +99,13 @@ bool ArpSpoof::getMyMac(const char *dev, Mac &mac)
     return false;
 
   struct ifreq ifr;
-
   memset(&ifr, 0, sizeof(ifr));
-  strncpy(ifr.ifr_name, dev, IFNAMSIZ - 1);
+  strncpy(ifr.ifr_name, dev, IFNAMSIZ - 1); // set interface name 
 
-  // Get MAC Address
-  bool ok = (ioctl(fd, SIOCGIFHWADDR, &ifr) >= 0);
+  
+  bool ok = (ioctl(fd, SIOCGIFHWADDR, &ifr) >= 0); // ask kernel for MAC 
   close(fd);
+
   if (!ok)
     return false;
   // Copy the MAC Address (6 bytes )
@@ -363,11 +364,13 @@ static void usage()
 
 int main(int argc, char *argv[]) 
 {
+  // Need at least : program name + interface + one sender + one target 
   if (argc < 4 || (argc % 2) != 0) {
     usage();
     return -1;
   }
 
+  // Parse command line : group IPs info sender-target pairs 
   std::vector<std::pair<Ip, Ip>> pairs;
   for (int i = 2; i + 1 < argc; i += 2)
     pairs.emplace_back(Ip(std::string(argv[i])), Ip(std::string(argv[i + 1])));
