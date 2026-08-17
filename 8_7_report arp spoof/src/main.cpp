@@ -162,6 +162,7 @@ void ArpSpoof::sendArp(Mac ethDmac, Mac ethSmac, uint16_t op, Mac arpSmac,
     fprintf(stderr, "pcap_sendpacket error %d %s\n", res, pcap_geterr(tx_));
 }
 
+// MAC -> IP
 // Find the MAC address for a specific IP using ARP Requests 
 Mac ArpSpoof::resolveMac(Ip ip) 
 {
@@ -186,7 +187,7 @@ Mac ArpSpoof::resolveMac(Ip ip)
       auto *p = reinterpret_cast<const EthArpPacket *>(data);
       if (p->eth_.type() != EthHdr::Arp) // check arp type
         continue;
-      if (p->arp_.op() != ArpHdr::Reply)
+      if (p->arp_.op() != ArpHdr::Reply) 
         continue;
       if (p->arp_.sip() != ip)
         continue; // sip() returns host byte order Ip
@@ -220,6 +221,7 @@ void ArpSpoof::periodicInfect()
   {
     for (size_t i = 0; i < flows_.size(); i++)
       infect(flows_[i]);
+    
     for (int i = 0; i < 10 && run_.load(); ++i)
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
@@ -286,7 +288,7 @@ void ArpSpoof::relayLoop()
         eth->smac_ = myMac_;                // change src mac to mine 
         eth->dmac_ = flows_[i].targetMac_;  // change dst mac to real gateway  
         std::lock_guard<std::mutex> lock(txMutex_);
-        int r = pcap_sendpacket(tx_, frame, header->caplen);
+        int r = pcap_sendpacket(tx_, frame, header->caplen); //send!
 
         if (r != 0)
           fprintf(stderr, "relay error %s\n", pcap_geterr(tx_));
