@@ -1,3 +1,37 @@
-build/
+# --- Build outputs ---
 airodump
 *.o
+*.obj
+*.out
+
+# --- CMake ---
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+Makefile.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+
+# Note: the project's own hand-written Makefile at the repo root is kept;
+# only CMake-generated Makefiles (inside build/) are ignored above.
+
+# --- Captures / debugging artifacts (pcap dumps from testing) ---
+*.pcap
+*.pcapng
+*.cap
+
+# --- Editor / IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
