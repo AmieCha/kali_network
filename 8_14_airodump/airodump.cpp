@@ -36,8 +36,6 @@ struct Dot11Hdr
     uint8_t  addr2[6];
     uint8_t  addr3[6];
     uint16_t seq;
-    // addr4 (WDS) and QoS control are deliberately not modeled here;
-    // this program does not need to look past the body for those frames.
 };
 
 struct BeaconFixed
@@ -118,8 +116,6 @@ static int getPower(const uint8_t* packet, size_t caplen)
         offset += 4;
     }
 
-    // Fields must be walked in bit order (0..31); each field is only
-    // present in the stream if its bit is set.
     if (present & (1u << 0)) // TSFT (8 bytes, 8-byte aligned)
     {
         offset = alignOffset(offset, 8);
