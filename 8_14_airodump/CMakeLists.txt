@@ -14,6 +14,6 @@ add_compile_options(-Wall -Wextra)
 find_package(PCAP REQUIRED)
 find_package(Threads REQUIRED)
 
-add_executable(airodump airodump.cpp)
+add_executable(airodump src/airodump.cpp src/dot11.cpp)
 target_link_libraries(airodump PRIVATE ${PCAP_LIBRARIES} Threads::Threads)
-target_include_directories(airodump PRIVATE ${PCAP_INCLUDE_DIR})
+target_include_directories(airodump PRIVATE ${PCAP_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include)

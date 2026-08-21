@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"c:/Users/amiec/Documents/kali_network/8_14_airodump\" && mv dot11.cpp src/dot11.cpp && ls src include)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\amiec\\Documents\\kali_network\\8_14_airodump"
+    ]
+  }
+}

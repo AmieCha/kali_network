@@ -1,67 +1,30 @@
-// dot11.h
-// Radiotap / 802.11 wire structures and parsing helpers shared by airodump.cpp
-#pragma once
+// dot11.cpp
+// Implementations for radiotap / 802.11 parsing helpers declared in dot11.h
+#include "dot11.h"
 
-#include <cstdint>
 #include <cstdio>
-#include <string>
-#include <array>
 
-// Wire structures
-#pragma pack(push, 1)
+const MacAddress BROADCAST_MAC = { 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF };
 
-struct RadiotapHdr
+void formatMac(const MacAddress& mac, char* out /* at least 18 bytes */)
 {
-    uint8_t  it_version;
-    uint8_t  it_pad;
-    uint16_t it_len;      // total length of the radiotap header
-    uint32_t it_present;  // bitmap of which fields follow
-};
+    snprintf(out, 18, "%02X:%02X:%02X:%02X:%02X:%02X",
+        mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
 
-struct Dot11Hdr
+size_t alignOffset(size_t offset, size_t alignment)
 {
-    uint16_t fc;       // frame control
-    uint16_t duration;
-    uint8_t  addr1[6];
-    uint8_t  addr2[6];
-    uint8_t  addr3[6];
-    uint16_t seq;
-};
+    return (offset + alignment - 1) & ~(alignment - 1);
+}
 
-struct BeaconFixed
-{
-    uint64_t timestamp;
-    uint16_t interval;
-    uint16_t capability;
-};
-
-#pragma pack(pop)
-
-using MacAddress = std::array<uint8_t, 6>;
-
-static const MacAddress BROADCAST_MAC = { 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF };
-
-// Small helpers
-inline MacAddress makeMac(const uint8_t* addr)
+MacAddress makeMac(const uint8_t* addr)
 {
     MacAddress mac;
     for (int i = 0; i < 6; i++) mac[i] = addr[i];
     return mac;
 }
 
-inline void formatMac(const MacAddress& mac, char* out /* at least 18 bytes */)
-{
-    snprintf(out, 18, "%02X:%02X:%02X:%02X:%02X:%02X",
-        mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-}
-
-inline size_t alignOffset(size_t offset, size_t alignment)
-{
-    return (offset + alignment - 1) & ~(alignment - 1);
-}
-
-// Radiotap: extract antenna signal (dBm) -> PWR column
-inline int getPower(const uint8_t* packet, size_t caplen)
+int getPower(const uint8_t* packet, size_t caplen)
 {
     if (caplen < sizeof(RadiotapHdr)) return -100;
 
@@ -108,8 +71,7 @@ inline int getPower(const uint8_t* packet, size_t caplen)
     return -100;
 }
 
-// Encryption detection from beacon information elements
-inline std::string getEncryption(const BeaconFixed* beacon, const uint8_t* tag, const uint8_t* end)
+std::string getEncryption(const BeaconFixed* beacon, const uint8_t* tag, const uint8_t* end)
 {
     // Privacy bit not set -> open network
     if ((beacon->capability & 0x0010) == 0)
@@ -146,9 +108,8 @@ inline std::string getEncryption(const BeaconFixed* beacon, const uint8_t* tag, 
     return "WEP"; // privacy bit set, but no RSN/WPA IE -> legacy WEP
 }
 
-// Shared IE (tagged parameter) walk: pulls out SSID + DS channel
-inline void parseSsidAndChannel(const uint8_t* tag, const uint8_t* end,
-                                 std::string& essid, int* channelOut)
+void parseSsidAndChannel(const uint8_t* tag, const uint8_t* end,
+                          std::string& essid, int* channelOut)
 {
     while (tag + 2 <= end)
     {
